@@ -180,7 +180,7 @@ fun GameApp() {
             containerColor = Bg,
             bottomBar = {
                 NavigationBar(containerColor = Panel) {
-                    listOf("Асосӣ", "Дарсҳо", "Бозӣ", "Рейтинг").forEachIndexed { i, name ->
+                    listOf("Асосӣ", "Дарсҳо", "Бозиҳо", "Рейтинг").forEachIndexed { i, name ->
                         NavigationBarItem(
                             selected = tab == i,
                             onClick = {
