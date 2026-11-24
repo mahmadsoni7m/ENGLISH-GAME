@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,7 +25,15 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platforms;android-37'
+          packages: ''
+
+      - name: Install Android 17 SDK
+        run: |
+          sdkmanager --install \
+            "platforms;android-37" \
+            "build-tools;37.0.0" \
+            "platform-tools"
+          sdkmanager --list_installed
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -30,7 +41,13 @@ jobs:
           gradle-version: '9.5'
 
       - name: Build APK
-        run: gradle assembleDebug
+        run: gradle --no-daemon assembleDebug
+
+      - name: Verify APK
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          ls -lh "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
