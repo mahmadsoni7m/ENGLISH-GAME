@@ -14,24 +14,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: ''
 
-      - name: Install Android 17 SDK
+      - name: Install Android SDK packages
         run: |
+          yes | sdkmanager --licenses
           sdkmanager --install \
             "platforms;android-37" \
-            "build-tools;37.0.0" \
+            "build-tools;36.0.0" \
             "platform-tools"
           sdkmanager --list_installed
 
@@ -45,12 +44,11 @@ jobs:
 
       - name: Verify APK
         run: |
-          APK="app/build/outputs/apk/debug/app-debug.apk"
-          test -s "$APK"
-          ls -lh "$APK"
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ENGLISH-GAME-v1.0-APK
           path: app/build/outputs/apk/debug/app-debug.apk
