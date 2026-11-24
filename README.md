@@ -2,7 +2,7 @@
 
 Version 1.0
 
-A gamified English-learning Android app with Tajik explanations.
+English learning game with Tajik explanations.
+Built with Kotlin and Jetpack Compose.
 
-## Build
-APK is built automatically with GitHub Actions.
+APK is built by GitHub Actions.
