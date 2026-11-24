@@ -1,9 +1,13 @@
 package tj.soni.englishgame
+import tj.soni.englishgame.data.LearnedWordsStore
+import tj.soni.englishgame.data.WordCatalog
+import tj.soni.englishgame.screens.LessonsScreen
+import tj.soni.englishgame.screens.WordsScreen
+import tj.soni.englishgame.data.Category
 
 import tj.soni.englishgame.screens.FindWordScreen
 
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -20,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.Locale
 
 private val Bg = Color(0xFF0C0B16)
 private val Panel = Color(0xFF19172A)
@@ -127,35 +130,17 @@ fun GameApp() {
 
     var xp by remember { mutableIntStateOf(prefs.getInt("xp", 0)) }
     var tab by remember { mutableIntStateOf(0) }
+    var searchQuery by remember { mutableStateOf("") }
     var completed by remember {
         mutableStateOf(prefs.getStringSet("completed_lessons", emptySet())?.toSet() ?: emptySet())
     }
 
     var selectedLesson by remember { mutableIntStateOf(0) }
+    var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var stage by remember { mutableStateOf("list") }
     var quizIndex by remember { mutableIntStateOf(0) }
     var quizScore by remember { mutableIntStateOf(0) }
     var selectedAnswer by remember { mutableStateOf<String?>(null) }
-
-    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
-
-    DisposableEffect(context) {
-        val engine = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                tts?.language = Locale.US
-            }
-        }
-        tts = engine
-        onDispose {
-            engine.stop()
-            engine.shutdown()
-            tts = null
-        }
-    }
-
-    fun speak(word: String) {
-        tts?.speak(word, TextToSpeech.QUEUE_FLUSH, null, "english_word")
-    }
 
     fun finishLesson() {
         val id = selectedLesson.toString()
@@ -195,7 +180,7 @@ fun GameApp() {
             containerColor = Bg,
             bottomBar = {
                 NavigationBar(containerColor = Panel) {
-                    listOf("Асосӣ", "Дарсҳо", "Бозӣ", "Профил").forEachIndexed { i, name ->
+                    listOf("Асосӣ", "Дарсҳо", "Бозӣ", "Рейтинг").forEachIndexed { i, name ->
                         NavigationBarItem(
                             selected = tab == i,
                             onClick = {
@@ -215,7 +200,6 @@ fun GameApp() {
                 Modifier.fillMaxSize()
                     .background(Bg)
                     .padding(padding)
-                    .verticalScroll(rememberScrollState())
                     .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -224,6 +208,48 @@ fun GameApp() {
                         Text("ENGLISH GAME 🇬🇧", color = Purple, fontWeight = FontWeight.Bold)
                         Text("Салом! 👋", color = White, fontSize = 29.sp, fontWeight = FontWeight.Bold)
                         Text("Ҳар рӯз каме англисӣ омӯз!", color = Muted)
+
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Ҷустуҷӯи калима ё ҷумла...") },
+                            singleLine = true
+                        )
+
+                        if (searchQuery.isNotBlank()) {
+                            val query = searchQuery.trim()
+                            val results = WordCatalog.categories.flatMap { category ->
+                                category.words.filter { word ->
+                                    listOf(
+                                        word.english,
+                                        word.tajik,
+                                        word.pronunciation,
+                                        word.sentenceEn,
+                                        word.sentenceTg
+                                    ).any { it.contains(query, ignoreCase = true) }
+                                }.map { word -> category to word }
+                            }
+
+                            Text("Натиҷаҳо: ${results.size}", color = Mint)
+
+                            results.forEach { (category, word) ->
+                                GameCard {
+                                    Text("${word.english} — ${word.tajik}", color = White, fontSize = 18.sp)
+                                    Text("Талаффуз: ${word.pronunciation}", color = Muted)
+                                    Text(word.sentenceEn, color = White)
+                                    Text(word.sentenceTg, color = Mint)
+                                    Text("${category.emoji} ${category.title}", color = Purple)
+                                    TextButton(onClick = {
+                                        selectedCategory = category
+                                        tab = 1
+                                        searchQuery = ""
+                                    }) {
+                                        Text("Кушодани категория →")
+                                    }
+                                }
+                            }
+                        }
 
                         GameCard {
                             Text("🚀 Ҳадафи имрӯз", color = White, fontSize = 20.sp)
@@ -237,147 +263,20 @@ fun GameApp() {
                         Text("Бахшҳои барнома", color = White, fontSize = 20.sp)
                         InfoCard("📖", "Калимаҳои нав", "Дарсҳои 10-калимаӣ")
                         InfoCard("🎯", "Тестҳо", "Баъди ҳар дарс 5 савол")
-                        InfoCard("🎧", "Талаффуз", "Калимаҳоро гӯш кун")
                         InfoCard("🏆", "Дастовардҳо", "XP ва сатҳҳо")
                     }
 
                     1 -> {
-                        when (stage) {
-                            "list" -> {
-                                Text("Дарсҳои англисӣ 📚", color = White, fontSize = 25.sp)
-                                Text("Ҳар дарс 10 калима ва 5 савол дорад.", color = Muted)
-
-                                lessonsData.forEachIndexed { index, item ->
-                                    GameCard {
-                                        Text("ДАРС ${index + 1}", color = Purple, fontWeight = FontWeight.Bold)
-                                        Text(item.title, color = White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
-                                        Text(item.description, color = Muted)
-                                        Text("10 калима • Тест аз 5 савол", color = Mint)
-                                        Button(
-                                            onClick = {
-                                                selectedLesson = index
-                                                quizIndex = 0
-                                                quizScore = 0
-                                                selectedAnswer = null
-                                                stage = "learn"
-                                            },
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text(if (index.toString() in completed) "Такрори дарс ↻" else "Оғози дарс →")
-                                        }
-                                        if (index.toString() in completed) {
-                                            Text("Иҷро шуд ✓", color = Mint)
-                                        }
-                                    }
-                                }
-                            }
-
-                            "learn" -> {
-                                Text("Дарси ${selectedLesson + 1}", color = Purple, fontWeight = FontWeight.Bold)
-                                Text(lesson.title, color = White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                                Text("Омӯзиши 10 калима", color = Muted)
-
-                                lesson.words.forEachIndexed { index, word ->
-                                    GameCard {
-                                        Row(
-                                            Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text("${index + 1}. ${word.en}", color = White, fontSize = 21.sp, fontWeight = FontWeight.Bold)
-                                            OutlinedButton(onClick = { speak(word.en) }) {
-                                                Text("🔊")
-                                            }
-                                        }
-                                        Text("Тарҷума: ${word.tg}", color = Mint, fontSize = 17.sp)
-                                        Text("Талаффуз: ${word.pronunciation}", color = Muted)
-                                        Divider(color = Purple.copy(alpha = 0.3f))
-                                        Text("Мисол: ${word.example}", color = White)
-                                        Text(word.exampleTg, color = Muted)
-                                    }
-                                }
-
-                                Button(
-                                    onClick = {
-                                        quizIndex = 0
-                                        quizScore = 0
-                                        selectedAnswer = null
-                                        stage = "quiz"
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Оғози тест →")
-                                }
-                            }
-
-                            "quiz" -> {
-                                val question = questions[quizIndex]
-                                Text("ТЕСТ 🎯", color = Purple, fontWeight = FontWeight.Bold)
-                                Text("Саволи ${quizIndex + 1} аз 5", color = White, fontSize = 23.sp)
-                                LinearProgressIndicator(
-                                    progress = { (quizIndex + 1) / 5f },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                                GameCard {
-                                    Text("«${question.word.tg}» ба англисӣ чӣ мешавад?", color = White, fontSize = 20.sp)
-                                    Text("Калимаи дурустро интихоб кун.", color = Muted)
-                                }
-
-                                question.options.forEach { option ->
-                                    OutlinedButton(
-                                        onClick = {
-                                            if (selectedAnswer == null) {
-                                                selectedAnswer = option
-                                                if (option == question.word.en) quizScore++
-                                            }
-                                        },
-                                        enabled = selectedAnswer == null,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(option, fontSize = 17.sp)
-                                    }
-                                }
-
-                                if (selectedAnswer != null) {
-                                    val correct = selectedAnswer == question.word.en
-                                    Text(
-                                        if (correct) "Офарин! Ҷавоби дуруст! 🎉"
-                                        else "Ҷавоби дуруст: ${question.word.en}",
-                                        color = if (correct) Mint else Color(0xFFFF8A8A),
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Button(
-                                        onClick = {
-                                            if (quizIndex < 4) {
-                                                quizIndex++
-                                                selectedAnswer = null
-                                            } else {
-                                                finishLesson()
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(if (quizIndex < 4) "Саволи навбатӣ →" else "Натиҷаи тест")
-                                    }
-                                }
-                            }
-
-                            "result" -> {
-                                Text("Офарин! 🏆", color = Mint, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                                GameCard {
-                                    Text("Дарс ба анҷом расид!", color = White, fontSize = 21.sp)
-                                    Text("Натиҷа: $quizScore аз 5 ҷавоби дуруст", color = Mint, fontSize = 18.sp)
-                                    Text("Мукофот: ${20 + quizScore * 5} XP", color = Purple, fontSize = 20.sp)
-                                    Text("Ҳамагӣ: $xp XP", color = White)
-                                }
-                                Button(
-                                    onClick = { stage = "list" },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Бозгашт ба дарсҳо")
-                                }
-                            }
+                        val category = selectedCategory
+                        if (category == null) {
+                            LessonsScreen(
+                                onCategoryClick = { selectedCategory = it }
+                            )
+                        } else {
+                            WordsScreen(
+                                category = category,
+                                onBack = { selectedCategory = null }
+                            )
                         }
                     }
 
@@ -388,18 +287,43 @@ fun GameApp() {
                     }
 
                     else -> {
-                        Text("Профили ман 👤", color = White, fontSize = 25.sp)
+                        val learnedCount = LearnedWordsStore.getLearnedIds(context).size
+                        val totalWords = WordCatalog.allWords.size
+                        val remaining = (totalWords - learnedCount).coerceAtLeast(0)
+
+                        Text("🏆 Рейтинги ман", color = White, fontSize = 25.sp)
                         GameCard {
                             Text("🧑‍🎓", fontSize = 55.sp)
-                            Text("Сатҳи ${xp / 100 + 1}", color = Purple, fontSize = 23.sp)
-                            Text("$xp XP", color = Mint, fontSize = 20.sp)
+                            Text("Сатҳи ${xp / 100 + 1}", color = Purple, fontSize = 25.sp)
+                            Text("$xp XP", color = Mint, fontSize = 22.sp)
                             LinearProgressIndicator(
                                 progress = { (xp % 100) / 100f },
                                 modifier = Modifier.fillMaxWidth()
-       )
-                            Text("${completed.size} дарс анҷом ёфт", color = Muted)
+                            )
+                            Text("${xp % 100} / 100 XP то сатҳи нав", color = Muted)
                         }
-                        Text("ENGLISH GAME • VERSION 1.1", color = Muted)
+
+                        GameCard {
+                            Text("📚 Пешрафти калимаҳо", color = White, fontSize = 19.sp)
+                            Text("✓ Азёдшуда: $learnedCount", color = Mint)
+                            Text("📖 Боқимонда: $remaining", color = Muted)
+                            Text("Ҳамагӣ: $totalWords калима", color = White)
+                            LinearProgressIndicator(
+                                progress = {
+                                    if (totalWords == 0) 0f
+                                    else learnedCount.toFloat().div(totalWords).coerceIn(0f, 1f)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        GameCard {
+                            Text("🎯 Дарсҳо", color = White, fontSize = 19.sp)
+                            Text("${completed.size} дарси кӯҳна анҷом ёфт", color = Muted)
+                            Text("19 категорияи омӯзишӣ", color = Mint)
+                        }
+
+                        Text("ENGLISH GAME • VERSION 2.0", color = Muted)
                     }
                 }
             }
