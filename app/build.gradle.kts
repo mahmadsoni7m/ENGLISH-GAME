@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "tj.soni.englishgame"
-    compileSdk = 37
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "tj.soni.englishgame"
         minSdk = 23
-        targetSdk = 37
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
     }

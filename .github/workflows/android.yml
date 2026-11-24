@@ -13,26 +13,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@v3
 
       - name: Install Android SDK packages
         run: |
+          sdkmanager --version
           yes | sdkmanager --licenses
-          sdkmanager --install \
-            "platforms;android-37" \
-            "build-tools;36.0.0" \
-            "platform-tools"
-          sdkmanager --list_installed
+          sdkmanager --verbose "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -40,15 +35,10 @@ jobs:
           gradle-version: '9.5'
 
       - name: Build APK
-        run: gradle --no-daemon assembleDebug
-
-      - name: Verify APK
-        run: |
-          test -s app/build/outputs/apk/debug/app-debug.apk
-          ls -lh app/build/outputs/apk/debug/app-debug.apk
+        run: gradle --no-daemon assembleDebug --stacktrace
 
       - name: Upload APK
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: ENGLISH-GAME-v1.0-APK
           path: app/build/outputs/apk/debug/app-debug.apk
