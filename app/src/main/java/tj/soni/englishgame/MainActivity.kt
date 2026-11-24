@@ -1,5 +1,7 @@
 package tj.soni.englishgame
 
+import tj.soni.englishgame.screens.FindWordScreen
+
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
@@ -380,16 +382,9 @@ fun GameApp() {
                     }
 
                     2 -> {
-                        Text("Бозии калимаҳо ⚡", color = White, fontSize = 25.sp)
-                        Text("Калимаҳои омӯхтаатро такрор кун.", color = Muted)
-                        GameCard {
-                            Text("🍎", fontSize = 55.sp)
-                            Text("Apple", color = Mint, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                            Text("Себ", color = White, fontSize = 19.sp)
-                            OutlinedButton(onClick = { speak("Apple") }) {
-                                Text("🔊 Шунидани талаффуз")
-                            }
-                        }
+                        FindWordScreen(
+                            onBack = { tab = 0 }
+                        )
                     }
 
                     else -> {
