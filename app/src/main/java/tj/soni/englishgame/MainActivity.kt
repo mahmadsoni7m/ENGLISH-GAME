@@ -8,7 +8,10 @@ import tj.soni.englishgame.data.Category
 import tj.soni.englishgame.screens.FindWordScreen
 import tj.soni.englishgame.screens.BuildWordScreen
 
+import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -143,6 +146,38 @@ fun GameApp() {
     var quizIndex by remember { mutableIntStateOf(0) }
     var quizScore by remember { mutableIntStateOf(0) }
     var selectedAnswer by remember { mutableStateOf<String?>(null) }
+
+    var lastBackPress by remember { mutableLongStateOf(0L) }
+
+    BackHandler {
+        when {
+            selectedGame != 0 -> {
+                selectedGame = 0
+            }
+            selectedCategory != null -> {
+                selectedCategory = null
+            }
+            stage != "list" -> {
+                stage = "list"
+            }
+            tab != 0 -> {
+                tab = 0
+            }
+            else -> {
+                val now = System.currentTimeMillis()
+                if (now - lastBackPress < 2000L) {
+                    (context as? Activity)?.finish()
+                } else {
+                    lastBackPress = now
+                    Toast.makeText(
+                        context,
+                        "Барои баромадан бори дигар Назад-ро пахш кун",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
 
     fun finishLesson() {
         val id = selectedLesson.toString()
