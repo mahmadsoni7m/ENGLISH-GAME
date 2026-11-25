@@ -6,6 +6,7 @@ import tj.soni.englishgame.screens.WordsScreen
 import tj.soni.englishgame.data.Category
 
 import tj.soni.englishgame.screens.FindWordScreen
+import tj.soni.englishgame.screens.BuildWordScreen
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -130,6 +131,7 @@ fun GameApp() {
 
     var xp by remember { mutableIntStateOf(prefs.getInt("xp", 0)) }
     var tab by remember { mutableIntStateOf(0) }
+    var selectedGame by remember { mutableIntStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
     var completed by remember {
         mutableStateOf(prefs.getStringSet("completed_lessons", emptySet())?.toSet() ?: emptySet())
@@ -205,7 +207,7 @@ fun GameApp() {
             ) {
                 when (tab) {
                     0 -> {
-                        Text("ENGLISH GAME 🇬🇧", color = Purple, fontWeight = FontWeight.Bold)
+                        Text("ZABONIQ 🇹🇯", color = Purple, fontWeight = FontWeight.Bold)
                         Text("Салом! 👋", color = White, fontSize = 29.sp, fontWeight = FontWeight.Bold)
                         Text("Ҳар рӯз каме англисӣ омӯз!", color = Muted)
 
@@ -281,9 +283,71 @@ fun GameApp() {
                     }
 
                     2 -> {
-                        FindWordScreen(
-                            onBack = { tab = 0 }
-                        )
+                        when (selectedGame) {
+                            1 -> FindWordScreen(
+                                onBack = { selectedGame = 0 }
+                            )
+
+                            2 -> BuildWordScreen(
+                                onBack = { selectedGame = 0 }
+                            )
+
+                            else -> {
+                                Text(
+                                    "🎮 МАРКАЗИ БОЗИҲО",
+                                    color = White,
+                                    fontSize = 25.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                                Text(
+                                    "Бозии дӯстдоштаатро интихоб кун!",
+                                    color = Muted
+                                )
+
+                                GameCard {
+                                    Text("🔍", fontSize = 42.sp)
+                                    Text(
+                                        "Калимаёбака",
+                                        color = White,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Тарҷумаи дурусти калимаро ёб!",
+                                        color = Muted
+                                    )
+                                    Button(
+                                        onClick = { selectedGame = 1 },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("▶ Бозиро оғоз кун")
+                                    }
+                                }
+
+                                GameCard {
+                                    Text("🧩", fontSize = 42.sp)
+                                    Text(
+                                        "Ҳарфҳоро ҷамъ кун",
+                                        color = White,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Аз ҳарфҳои пароканда калима соз!",
+                                        color = Muted
+                                    )
+                                    Button(
+                                        onClick = { selectedGame = 2 },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Purple
+                                        )
+                                    ) {
+                                        Text("▶ Бозиро оғоз кун")
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     else -> {
@@ -323,7 +387,7 @@ fun GameApp() {
                             Text("19 категорияи омӯзишӣ", color = Mint)
                         }
 
-                        Text("ENGLISH GAME • VERSION 2.0", color = Muted)
+                        Text("ZABONIQ • VERSION 2.1", color = Muted)
                     }
                 }
             }
