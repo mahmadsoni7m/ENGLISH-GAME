@@ -8,7 +8,6 @@ import tj.soni.englishgame.data.Category
 import tj.soni.englishgame.screens.FindWordScreen
 import tj.soni.englishgame.screens.BuildWordScreen
 import tj.soni.englishgame.screens.WordHuntScreen
-import tj.soni.englishgame.screens.EscapeRoomScreen
 
 import android.app.Activity
 import android.os.Bundle
@@ -335,13 +334,6 @@ fun GameApp() {
                                     prefs.edit().putInt("xp", xp).apply()
                                 }
                             )
-                            4 -> EscapeRoomScreen(
-                                onBack = { selectedGame = 0 },
-                                onXp = { earned ->
-                                    xp += earned
-                                    prefs.edit().putInt("xp", xp).apply()
-                                }
-                            )
 
                             else -> {
                                 Text(
@@ -410,17 +402,6 @@ fun GameApp() {
                                     }
                                 }
 
-                                GameCard {
-                                    Text("🚪", fontSize = 42.sp)
-                                    Text("Фирор аз ҳуҷра", color = White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                    Text("5 дарро бо дониши англисӣ кушо!", color = Muted)
-                                    Button(
-                                        onClick = { selectedGame = 4 },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("▶ Бозиро оғоз кун")
-                                    }
-                                }
                             }
                         }
                     }
