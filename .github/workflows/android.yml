@@ -28,6 +28,9 @@ jobs:
           accept-android-sdk-licenses: true
           packages: ''
 
+      - name: Accept all SDK licenses
+        run: yes | sdkmanager --licenses
+
       - name: Install required Android packages
         run: |
           sdkmanager --install \
