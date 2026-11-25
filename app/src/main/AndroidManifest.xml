@@ -4,7 +4,7 @@
         android:roundIcon="@drawable/zaboniq"
         android:allowBackup="true"
         android:label="ZABONIQ"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
             android:exported="true">
